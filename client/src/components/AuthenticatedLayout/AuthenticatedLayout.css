@@ -1,0 +1,133 @@
+.authenticated-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.authenticated-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  width: 240px;
+  height: 100vh;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 30px;
+  align-self: flex-start;
+  padding: 28px 18px;
+  border-right: 1px solid var(--theme-border-6ea1e8bb);
+  background: linear-gradient(180deg, var(--theme-surface-c5fb0c25) 0%, var(--theme-surface-a9b3112a) 100%);
+  color: var(--theme-text-e37b9a8c);
+  box-shadow: 8px 0 30px var(--theme-shadow-e1578073);
+}
+
+.authenticated-brand {
+  margin: 0;
+  padding: 0 10px;
+  color: var(--theme-text-6a19e4f4);
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.authenticated-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.authenticated-nav-link {
+  padding: 10px 16px;
+  border: 1px solid var(--theme-border-c6ec71d2);
+  border-radius: 9px;
+  color: var(--theme-text-3b43fda0);
+  text-align: left;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.authenticated-nav-link:hover,
+.authenticated-nav-link-active {
+  border-color: var(--theme-border-b834369d);
+  background: var(--theme-surface-63b93a60);
+  color: var(--theme-text-290d50ec);
+}
+
+.authenticated-nav-link:hover {
+  transform: translateX(2px);
+}
+
+.authenticated-logout {
+  margin-top: auto;
+  border: 1px solid var(--theme-border-b51b351f);
+  background: var(--theme-surface-7911bb00);
+  color: var(--theme-text-7d49ae19);
+}
+
+.authenticated-logout:hover {
+  background: var(--theme-surface-c1416c4e);
+}
+
+.authenticated-main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .authenticated-layout {
+    flex-direction: column;
+  }
+
+  .authenticated-sidebar {
+    z-index: 1;
+    width: 100%;
+    height: auto;
+    gap: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 8px 24px var(--theme-shadow-059d2a4a);
+  }
+
+  .authenticated-nav {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .authenticated-nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .authenticated-nav-link:hover {
+    transform: none;
+  }
+
+  .authenticated-logout {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    margin-top: 0;
+  }
+
+  .authenticated-brand {
+    padding-right: 90px;
+  }
+}
+
+@media (max-width: 370px) {
+  .authenticated-sidebar {
+    padding: 12px;
+  }
+
+  .authenticated-logout {
+    right: 12px;
+  }
+
+  .authenticated-nav-link {
+    padding: 9px 12px;
+  }
+}

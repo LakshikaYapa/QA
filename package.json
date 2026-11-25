@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "client:dev": "npm --prefix client run dev",
+    "client:build": "npm --prefix client run build",
+    "client:lint": "npm --prefix client run lint",
+    "server:start": "npm --prefix server start",
+    "test:unit": "npm --prefix server test"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.18.4"
+  }
+}

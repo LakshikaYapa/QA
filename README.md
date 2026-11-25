@@ -1,0 +1,271 @@
+# Skill & Career Development Platform
+
+A full-stack web application that helps users manage their skills, track professional development, explore career paths, and build a professional portfolio.
+
+## Live Demo
+
+- **Live Demo:** [https://skill-career-platform.onrender.com/](https://skill-career-platform.onrender.com/)
+- **GitHub Repository:** [https://github.com/Sahan619/skill-career-development-platform.git](https://github.com/Sahan619/skill-career-development-platform.git)
+
+## Screenshots
+
+
+
+- Login page: ![alt text](image.png)
+- Main dashboard: ![alt text](image-1.png)
+- Skills  page: ![alt text](image-2.png)
+- Career roadmap :![alt text](image-4.png) ![alt text](image-3.png)
+
+## Overview
+
+The Skill & Career Development Platform brings skill management, career planning, progress tracking, and portfolio building into one place. It also integrates Gemini AI to generate personalized career recommendations and learning resources.
+
+## Features
+
+### User Authentication
+- User registration and login.
+- JWT-based authentication for protected API endpoints.
+
+### Profile Management
+- View and update profile information.
+- Upload a profile photo using Cloudinary.
+
+### Skill Management
+- Add, view, update, and delete skills.
+- Organize and manage professional skills.
+
+### Progress Tracking
+- Record and manage learning progress.
+- Track progress toward professional development goals.
+
+### Career Path Recommendations
+- Explore career paths.
+- Generate AI-powered career recommendations using Gemini.
+- Select a career path to guide your development.
+
+### Personalized Learning Roadmap
+- Explore skills associated with a selected career path.
+- Generate learning resources, including courses and books, using Gemini AI.
+- View suggested learning durations and practical tasks.
+
+### Professional Portfolio
+- Manage portfolio projects.
+- Add project information and upload project images.
+- Remove projects when they are no longer needed.
+
+## Technology Stack
+
+| Area | Technologies |
+|---|---|
+| Frontend | React, TypeScript, Vite |
+| Routing | React Router |
+| Backend | Node.js, Express |
+| Database | MongoDB, Mongoose |
+| Authentication | JSON Web Tokens (JWT), bcryptjs |
+| AI Integration | Google Gemini API |
+| Image Storage | Cloudinary |
+| API Communication | Axios / Fetch API |
+| Deployment | Render (planned or in progress) |
+
+## Project Structure
+
+```text
+skill-career-development-platform/
+├── client/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── .env
+├── server/
+│   ├── models/
+│   ├── middleware/
+│   ├── index.js
+│   └── package.json
+└── README.md
+```
+
+*Note: The structure above highlights the main project directories. Individual files may differ as development continues.*
+
+## Prerequisites
+
+Install the following before running the project locally:
+
+- Node.js and npm
+- A MongoDB database, such as MongoDB Atlas
+- A Google Gemini API key
+- A Cloudinary account for image uploads
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Sahan619/skill-career-development-platform.git
+cd skill-career-development-platform
+```
+
+### 2. Configure the backend
+
+Navigate to the server directory and install dependencies:
+
+```bash
+cd server
+npm install
+```
+
+Create `server/.env` from the included `server/.env.example` and configure the required environment variables:
+
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+Replace `MONGO_URI` and `JWT_SECRET` with your own values. Gemini and Cloudinary are optional: the core authentication, profile, skill, progress, career-path, and project features do not require them. AI endpoints return a clear configuration error until `GEMINI_API_KEY` is supplied, and image-upload endpoints require the Cloudinary values.
+
+For a local MongoDB installation, the example URI uses the dedicated development database `skill-career-development-dev`:
+
+```powershell
+Copy-Item server/.env.example server/.env
+```
+
+Start the backend:
+
+```bash
+npm start
+```
+
+The backend should run on `http://localhost:5000`, provided that port 5000 is available.
+
+### 3. Configure the frontend
+
+Open a second terminal from the project root:
+
+```bash
+cd client
+npm install
+```
+
+Create `client/.env` from the included `client/.env.example`:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+The frontend also falls back to `http://localhost:5000` when `VITE_API_URL` is not set.
+
+### Windows paths containing spaces
+
+Use PowerShell's literal-path handling when changing into the project directory:
+
+```powershell
+Set-Location -LiteralPath 'D:\path\to\skill-career-development-platform-main'
+Set-Location -LiteralPath (Join-Path (Get-Location) 'client')
+npm run dev
+```
+
+The client scripts call the installed Vite, TypeScript, and ESLint JavaScript entry points through Node directly. This avoids a malformed `node_modules/.bin/*.cmd` shim resolving a path such as `D:\path\to\vite\bin\vite.js` when a parent directory contains spaces.
+
+If dependencies are missing, reinstall them from the relevant directory:
+
+```powershell
+npm install
+```
+
+Do not add absolute local paths to `package.json`, `vite.config.ts`, or environment files.
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open the local URL printed by Vite in your terminal.
+
+## Environment Variables
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | Backend server port |
+| `MONGO_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret used to sign authentication tokens |
+| `GEMINI_API_KEY` | Access to Gemini AI services |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account identifier |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `VITE_API_URL` | Base URL used by the frontend to communicate with the backend |
+
+Never commit real credentials or API keys to GitHub. Keep environment files out of version control.
+
+## API Overview
+
+The backend exposes REST API endpoints for:
+
+- Authentication and user profiles
+- Profile photo uploads
+- Skill management
+- Progress tracking
+- Career path retrieval and recommendations
+- Selected career paths
+- AI-generated roadmap resources
+- Portfolio project management and image uploads
+
+Protected endpoints require valid authentication where applicable.
+
+## Deployment
+
+The application can be deployed using Render:
+
+- **Frontend:** Render Static Site
+- **Backend:** Render Web Service
+- **Database:** MongoDB Atlas
+- **Image storage:** Cloudinary
+- **AI services:** Google Gemini API
+
+For deployment, configure the backend environment variables in Render and set `VITE_API_URL` to the deployed backend URL in the frontend's build environment. Rebuild the frontend after changing its environment variables.
+
+The backend must also permit requests from the deployed frontend through its CORS configuration.
+
+## Future Improvements
+
+- Persist generated learning resources for reuse.
+- Add automated backend and frontend tests.
+- Improve validation, error handling, and loading states.
+- Add more detailed progress analytics.
+- Enhance deployment automation with CI/CD.
+
+## Backend unit testing
+
+The backend uses Jest. Unit tests are stored at the project root in `tests/unit` and are configured by `server/jest.config.cjs`.
+
+Run the current unit-test baseline from the project root:
+
+```powershell
+npm run test:unit
+```
+
+Or run it from the backend directory:
+
+```powershell
+cd server
+npm test
+```
+
+The initial test covers the existing authentication middleware's missing-token branch. Additional tests should be added incrementally for existing API validation, authentication, progress, skill, project, and configuration behavior. There is currently no quiz implementation in the project, so quiz tests should not be added until that feature exists.
+
+## Author
+
+**Sahan Sampath**
+
+Computer Engineering Undergraduate  
+University of Ruhuna, Sri Lanka
+
+GitHub: [Sahan619](https://github.com/Sahan619)
+
+---
+
+*Developed as a full-stack software engineering portfolio project focused on career development, REST APIs, authentication, database integration, and AI-powered learning support.*

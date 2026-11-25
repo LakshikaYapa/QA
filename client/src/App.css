@@ -1,0 +1,68 @@
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.authenticated-main,
+.dashboard-page,
+.skills-page,
+.progress-page,
+.roadmap-page,
+.career-page,
+.projects-page,
+.portfolio-page,
+.profile-page {
+  min-width: 0;
+}
+
+.dashboard-page h1,
+.skills-page h1,
+.progress-page h1,
+.roadmap-page h1,
+.career-page h1,
+.projects-page h1,
+.portfolio-page h1,
+.profile-page h1 {
+  color: var(--theme-text-4128576d);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.dashboard-content-card,
+.dashboard-stat-card,
+.skills-panel,
+.skill-card,
+.skills-empty-state,
+.progress-overview,
+.progress-form-panel,
+.progress-card,
+.progress-empty-state,
+.roadmap-summary,
+.roadmap-step,
+.roadmap-empty-state,
+.career-count,
+.ai-career-section,
+.career-card,
+.career-empty-state,
+.projects-form-panel,
+.project-card,
+.projects-empty-state,
+.portfolio-header,
+.portfolio-section,
+.profile-card {
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 600px) {
+  .dashboard-page,
+  .skills-page,
+  .progress-page,
+  .roadmap-page,
+  .career-page,
+  .projects-page,
+  .portfolio-page,
+  .profile-page {
+    overflow-wrap: anywhere;
+  }
+}
