@@ -1,0 +1,9 @@
+# Agile and DevOps Reflection — Member 1
+
+The inspected application README describes a full-stack Skill & Career Development Platform and lists automated backend/frontend tests and CI/CD as future improvements. No workflow configuration or test suite was present in the application repository; the backend test script is a placeholder and the client has no test script. Therefore, this report does not claim that the project currently practices CI/CD or automated continuous testing.
+
+For this assignment, short feedback cycles can be applied by confirming a requirement, running the corresponding F1/F2 case, recording evidence, discussing a reproducible failure with its feature owner, and retesting a fix. Collaboration is necessary to provide a safe test database, synthetic accounts, acceptance criteria, and feature-specific context. A shared defect tracker helps preserve ownership and state across those handoffs.
+
+Manual testing provides feedback now for client-side form validation and route behavior. When a dedicated test API/database and build workflow are available, automated checks can complement—not replace—these manual cases, and CI can run relevant checks against each change. Continuous delivery should be described only if a verified release pipeline exists; the README mentions Render deployment, but the inspected repository does not establish a deployed delivery process for this assignment.
+
+The current execution demonstrates why iterative improvement includes environment readiness: missing MongoDB/API configuration blocks most end-to-end tests, so the next cycle should supply an isolated test database, safe credentials, and Cloudinary test configuration where needed. Test outcomes and RCA should inform changes to requirements, test data, and regression coverage. Review the group's actual collaboration and CI evidence before making claims in the final assignment submission.
