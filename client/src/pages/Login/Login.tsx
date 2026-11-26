@@ -16,7 +16,7 @@ const Login = () => {
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/u;
+  const emailPattern = /^[^@\s]{1,254}@[^@\s]{1,254}\.[^@\s]{1,254}$/u;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -54,7 +54,7 @@ const Login = () => {
         JSON.stringify(response.data.user)
       );
 
-      navigate('/dashboard');
+      await navigate('/dashboard');
     } catch (error) {
       if (axios.isAxiosError(error)) {
         setLoginError(
