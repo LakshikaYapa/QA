@@ -1,0 +1,471 @@
+{
+  "info": {
+    "_postman_id": "c0e87451-1471-4d4a-9c44-f4f36ac13b4d",
+    "name": "Member 4 - Skill Career API",
+    "description": "Tests only API routes present in the application. Registration creates synthetic users and a skill, so use an isolated test database.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:5000" },
+    { "key": "ownerToken", "value": "" },
+    { "key": "otherToken", "value": "" },
+    { "key": "ownerEmail", "value": "" },
+    { "key": "otherEmail", "value": "" },
+    { "key": "testPassword", "value": "" },
+    { "key": "ownerSkillId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "API health",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;",
+              "pm.collectionVariables.set('ownerEmail', `m4-owner-${runId}@example.invalid`);",
+              "pm.collectionVariables.set('otherEmail', `m4-other-${runId}@example.invalid`);",
+              "pm.collectionVariables.set('testPassword', `M4-Test-${runId}!Aa1`);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('health endpoint responds successfully', () => pm.response.to.have.status(200));",
+              "pm.test('health response identifies the API', () => pm.expect(pm.response.text()).to.include('API is running'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/"
+      }
+    },
+    {
+      "name": "Register owner test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('synthetic user is created', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('response does not expose a password', () => pm.expect(body.user).to.not.have.property('password'));",
+              "pm.test('response contains the generated email', () => pm.expect(body.user.email).to.eql(pm.collectionVariables.get('ownerEmail')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Member Four API Test\",\"email\":\"{{ownerEmail}}\",\"password\":\"{{testPassword}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Reject duplicate registration",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('duplicate email is rejected', () => pm.response.to.have.status(409));",
+              "pm.test('duplicate response is explicit', () => pm.expect(pm.response.json().message).to.eql('User already exists'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Member Four API Test\",\"email\":\"{{ownerEmail}}\",\"password\":\"{{testPassword}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Reject weak registration password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('weak password is rejected', () => pm.response.to.have.status(400));",
+              "pm.test('password policy is described', () => pm.expect(pm.response.json().message).to.include('Password must be at least 8 characters'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Invalid Password Test\",\"email\":\"weak-{{ownerEmail}}\",\"password\":\"weak\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Reject registration with missing fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('missing registration fields are rejected', () => pm.response.to.have.status(400));",
+              "pm.test('response identifies missing required fields', () => pm.expect(pm.response.json().message).to.eql('All fields are required'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"\",\"email\":\"\",\"password\":\"\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Reject login with missing fields",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('missing login fields are rejected', () => pm.response.to.have.status(400));",
+              "pm.test('response identifies required login fields', () => pm.expect(pm.response.json().message).to.eql('Email and password are required'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"\",\"password\":\"\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Login owner test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('valid test credentials authenticate', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('login returns a token and safe user data', () => { pm.expect(body.token).to.be.a('string').and.not.empty; pm.expect(body.user).to.not.have.property('password'); });",
+              "pm.collectionVariables.set('ownerToken', body.token);",
+              "pm.collectionVariables.set('ownerUserId', body.user.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{{ownerEmail}}\",\"password\":\"{{testPassword}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Reject invalid login credentials",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('unknown account is rejected', () => pm.response.to.have.status(401));",
+              "pm.test('login error does not reveal account existence', () => pm.expect(pm.response.json().message).to.eql('Invalid email or password'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"missing-{{ownerEmail}}\",\"password\":\"{{testPassword}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Reject operator-like login input",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('operator-like email string is not treated as an operator', () => pm.response.to.have.status(401));",
+              "pm.test('request does not result in a server error', () => pm.expect(pm.response.code).to.not.eql(500));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{\\\"$ne\\\":null}\",\"password\":\"{{testPassword}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Reject profile request without token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('protected profile requires authentication', () => pm.response.to.have.status(401));",
+              "pm.test('response explains missing token', () => pm.expect(pm.response.json().message).to.eql('No token provided'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/profile"
+      }
+    },
+    {
+      "name": "Reject profile request with invalid token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('invalid bearer token is rejected', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer definitely-not-a-valid-token" }],
+        "url": "{{baseUrl}}/api/profile"
+      }
+    },
+    {
+      "name": "Get owner profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('authenticated profile request succeeds', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('profile belongs to the authenticated user', () => pm.expect(body.email).to.eql(pm.collectionVariables.get('ownerEmail')));",
+              "pm.test('profile response never contains password hash', () => pm.expect(body).to.not.have.property('password'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+        "url": "{{baseUrl}}/api/profile"
+      }
+    },
+    {
+      "name": "Create owner skill",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('valid skill is created', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('created skill has expected test data', () => pm.expect(body.skill.name).to.eql('Member Four API Test Skill'));",
+              "pm.collectionVariables.set('ownerSkillId', body.skill._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Member Four API Test Skill\",\"category\":\"QA Automation\",\"level\":\"Beginner\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/skills"
+      }
+    },
+    {
+      "name": "Get owner skills",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('authenticated skills request succeeds', () => pm.response.to.have.status(200));",
+              "const skills = pm.response.json();",
+              "pm.test('owner can see their test skill', () => pm.expect(skills.some((skill) => skill._id === pm.collectionVariables.get('ownerSkillId'))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+        "url": "{{baseUrl}}/api/skills"
+      }
+    },
+    {
+      "name": "Register second test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('second synthetic user is created', () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Member Four Other API Test\",\"email\":\"{{otherEmail}}\",\"password\":\"{{testPassword}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Login second test user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('second test user can authenticate', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('otherToken', pm.response.json().token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{{otherEmail}}\",\"password\":\"{{testPassword}}\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Prevent cross-user skill update",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('another user cannot update the owner skill', () => pm.response.to.have.status(404));",
+              "pm.test('missing owned resource is reported', () => pm.expect(pm.response.json().message).to.eql('Skill not found'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{otherToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Unauthorized Update Attempt\",\"category\":\"QA Automation\",\"level\":\"Advanced\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/skills/{{ownerSkillId}}"
+      }
+    },
+    {
+      "name": "Reject malformed project identifier",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('malformed project id is rejected as a client error', () => pm.response.to.have.status(400));",
+              "pm.test('validation response is explicit', () => pm.expect(pm.response.json().message).to.eql('Invalid project ID'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"title\":\"Validation-only test\"}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/projects/not-a-mongo-id"
+      }
+    }
+  ]
+}
