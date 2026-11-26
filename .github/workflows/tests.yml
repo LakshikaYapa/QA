@@ -1,0 +1,137 @@
+name: Member 4 QA checks
+
+on:
+  push:
+    paths:
+      - "client/**"
+      - "server/**"
+      - "tests/**"
+      - "member-4/**"
+      - ".github/workflows/tests.yml"
+  pull_request:
+    paths:
+      - "client/**"
+      - "server/**"
+      - "tests/**"
+      - "member-4/**"
+      - ".github/workflows/tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out QA repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install application dependencies
+        run: |
+          npm ci --prefix server
+          npm ci --prefix client
+
+      - name: Set up Python and Chrome
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Install Selenium test dependencies
+        run: python -m pip install -r member-4/selenium/requirements.txt
+
+      - name: Run backend unit and API tests
+        run: npm test --prefix server
+
+      - name: Run frontend component tests
+        run: npm test --prefix client
+
+      - name: Build frontend
+        run: npm run build --prefix client
+
+      - name: Start backend
+        working-directory: server
+        env:
+          MONGO_URI: mongodb://127.0.0.1:27017/skill-career-platform-member4-ci
+          JWT_SECRET: member4-ci-only-${{ github.run_id }}-${{ github.run_attempt }}
+          CORS_ORIGINS: http://127.0.0.1:5173,http://localhost:5173
+          PORT: "5000"
+        run: |
+          npm start > "$RUNNER_TEMP/member4-server.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5000/ > /dev/null \
+              && grep --quiet "MongoDB connected successfully" "$RUNNER_TEMP/member4-server.log"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/member4-server.log"
+          exit 1
+
+      - name: Start frontend
+        working-directory: client
+        env:
+          VITE_API_URL: http://127.0.0.1:5000
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 5173 > "$RUNNER_TEMP/member4-client.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5173/login > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/member4-client.log"
+          exit 1
+
+      - name: Run Postman API tests with Newman
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/member-4/reports"
+          npx --yes newman@6.2.3 run \
+            "$GITHUB_WORKSPACE/member-4/postman/skill-career-api.postman_collection.json" \
+            --environment "$GITHUB_WORKSPACE/member-4/postman/skill-career-api.postman_environment.json" \
+            --bail \
+            --reporters cli,junit \
+            --reporter-junit-export "$GITHUB_WORKSPACE/member-4/reports/newman-results.xml"
+
+      - name: Run Selenium UI tests
+        working-directory: member-4/selenium
+        env:
+          BASE_URL: http://127.0.0.1:5173
+          API_URL: http://127.0.0.1:5000
+          HEADLESS: "true"
+          SCREENSHOTS_DIR: ${{ github.workspace }}/member-4/screenshots
+        run: python -m pytest --junitxml=../reports/selenium-results.xml
+
+      - name: Upload test reports and failure screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: member-4-test-results
+          path: |
+            member-4/reports/
+            member-4/screenshots/
+            ${{ runner.temp }}/member4-server.log
+            ${{ runner.temp }}/member4-client.log
+          if-no-files-found: warn
