@@ -168,64 +168,53 @@ The authentication middleware cases include missing, malformed, expired, and
 valid bearer tokens. The CI workflow runs the complete existing backend test
 suite; no duplicate authentication unit test is added here.
 
-## JMeter performance plan — approval required before execution
+## JMeter performance test results
 
 `jmeter/skill-career-api-load.jmx` contains sequential 50-user and 100-user
 scenarios, each with a 10-second ramp-up. Each virtual user calls the existing
 health GET route and login POST route once. Login assertions require valid
-disposable test-account credentials supplied at run time. The plan has **not**
-been run. Do not run it until the user approves and confirms the local/test
-target is authorized.
+disposable test-account credentials supplied at run time.
 
-After approval, use a test-only properties file outside the repository. It
-must contain a valid test account and the local host/port, and must not be
-committed or shared:
+The plan was executed on 2026-11-26 against the authorized local API at
+`127.0.0.1:5000`, using a synthetic account and local MongoDB. JMeter 5.6.3
+completed 300 requests with 0 errors. The generated dashboard and raw JTL are
+included in `reports/`. Reported throughput and latency by sampler:
 
-```text
-baseHost=127.0.0.1
-basePort=5000
-baseProtocol=http
-loginEmail=<disposable-test-email>
-loginPassword=<disposable-test-password>
-```
+| Scenario | Endpoint | Samples | Average (ms) | 90th percentile (ms) | Throughput (req/s) | Errors |
+|---|---|---:|---:|---:|---:|---:|
+| 50 users | GET API health | 50 | 46.28 | 170.30 | 5.25 | 0% |
+| 50 users | POST login | 50 | 220.24 | 382.20 | 5.22 | 0% |
+| 100 users | GET API health | 100 | 851.10 | 1,488.10 | 8.49 | 0% |
+| 100 users | POST login | 100 | 2,530.67 | 4,139.00 | 6.93 | 0% |
 
-Create the private local folder and open a text editor to save that file:
+Login response time rose substantially at 100 users. These results describe
+this local machine/test database and are not a production-capacity guarantee.
+No external or production system was targeted.
 
-```powershell
-New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\Member4"
-notepad "$env:LOCALAPPDATA\Member4\load-test.properties"
-```
-
-Replace both placeholders with a synthetic test account before running JMeter.
-
-```powershell
-jmeter -n `
-  -t D:\QA-publish\member-4\jmeter\skill-career-api-load.jmx `
-  -q "$env:LOCALAPPDATA\Member4\load-test.properties" `
-  -l D:\QA-publish\member-4\reports\jmeter-results.jtl `
-  -e -o D:\QA-publish\member-4\reports\jmeter-html
-```
-
-Use a new/empty output folder for each HTML report run. Review average and
-90th-percentile response times, throughput, and error percentage in the
-report. A high error percentage or a login assertion failure invalidates
-performance conclusions; record machine specs, MongoDB configuration, and
-test-account setup with the results. Do not run against production or an
-external host.
+The test-only properties file containing the synthetic login password is kept
+outside the repository at `%LOCALAPPDATA%\Member4\load-test.properties` and
+must never be committed. The HTML dashboard is at
+[`reports/jmeter-html/index.html`](./reports/jmeter-html/index.html); the raw
+samples are at [`reports/jmeter-results.jtl`](./reports/jmeter-results.jtl).
+The dashboard screenshot is
+[`screenshots/jmeter-performance-dashboard.png`](./screenshots/jmeter-performance-dashboard.png).
 
 ## Security test status
 
 See [security/security-test-record.md](./security/security-test-record.md).
-The source review found no substantiated vulnerabilities in the requested
-categories; dynamic checks must still be run against the local isolated test
-environment before recording runtime results.
+The source review and automated Newman security assertions passed in the
+successful [GitHub Actions run #8](https://github.com/LakshikaYapa/QA/actions/runs/45742456912)
+against its disposable MongoDB service. This does not constitute a separate
+local penetration test; see the record for test scope and limitations.
 
 ## CI/CD status and workflow
 
 The workflow is at `.github/workflows/tests.yml` in this QA repository. It
 starts a disposable MongoDB service, runs the existing backend and frontend
-tests, QA-owned middleware tests, builds the frontend, then runs Newman and
-headless Selenium. It intentionally does not run JMeter.
+tests, builds the frontend, then runs Newman and headless Selenium. The
+successful [run #8](https://github.com/LakshikaYapa/QA/actions/runs/45742456912)
+passed the backend, frontend, build, Newman, and Selenium steps. It
+intentionally does not run JMeter.
 
 The published QA repository is
 `https://github.com/LakshikaYapa/QA`. Pushes and pull requests that change
@@ -239,6 +228,12 @@ visible.
 
 - Capture the pytest summary and Selenium screenshots only for failed cases.
 - Save the Newman CLI summary and JUnit XML report.
-- After approved JMeter execution, save the HTML dashboard and JTL results.
+- JMeter HTML dashboard and raw JTL results are included under `reports/`.
+- JMeter dashboard and successful CI screenshots are in `screenshots/`.
 - Record environment, date, run identifier, and actual outcome for each run.
 - Never capture real passwords, database URIs, API keys, or bearer tokens.
+
+Evidence screenshots:
+
+- [JMeter performance dashboard](./screenshots/jmeter-performance-dashboard.png)
+- [Successful Member 4 CI run](./screenshots/github-actions-member4-ci-success.png)
