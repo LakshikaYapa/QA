@@ -14,6 +14,7 @@ const cloudinary = require('cloudinary').v2;
 const { GoogleGenAI } = require('@google/genai');
 const connectDB = require('./config/db');
 const User = require('./models/User');
+const isValidProgressValue = require('./services/progressValidation');
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -516,7 +517,7 @@ app.post('/api/progress', authMiddleware, async (req, res) => {
       });
     }
 
-    if (progress < 0 || progress > 100) {
+    if (!isValidProgressValue(progress)) {
       return res.status(400).json({
         message: 'Progress must be between 0 and 100',
       });
@@ -578,7 +579,7 @@ app.put('/api/progress/:id', authMiddleware, async (req, res) => {
   try {
     const { progress } = req.body;
 
-    if (progress === undefined || progress < 0 || progress > 100) {
+    if (progress === undefined || !isValidProgressValue(progress)) {
       return res.status(400).json({
         message: 'Progress must be between 0 and 100',
       });

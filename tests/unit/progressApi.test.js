@@ -6,6 +6,7 @@ jest.mock('../../server/models/Skill', () => ({
 }));
 
 jest.mock('../../server/models/Progress', () => ({
+  create: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
   findOneAndDelete: jest.fn(),
@@ -58,6 +59,82 @@ describe('Progress API endpoints', () => {
     expect(Progress.findOne).not.toHaveBeenCalled();
   });
 
+  test('POST /api/progress rejects numeric strings before database lookups', async () => {
+    Skill.findOne.mockResolvedValue({ _id: 'skill-1' });
+    Progress.findOne.mockResolvedValue(null);
+    Progress.create.mockResolvedValue({
+      _id: 'progress-string-value',
+      progress: '50',
+      populate: jest.fn().mockResolvedValue(),
+    });
+
+    const response = await request(app)
+      .post('/api/progress')
+      .set('Authorization', authHeader())
+      .send({ skillId: 'skill-1', progress: '50' });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      message: 'Progress must be between 0 and 100',
+    });
+    expect(Skill.findOne).not.toHaveBeenCalled();
+    expect(Progress.findOne).not.toHaveBeenCalled();
+    expect(Progress.create).not.toHaveBeenCalled();
+  });
+
+  test('POST /api/progress rejects null progress before database lookups', async () => {
+    const response = await request(app)
+      .post('/api/progress')
+      .set('Authorization', authHeader())
+      .send({ skillId: 'skill-1', progress: null });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      message: 'Progress must be between 0 and 100',
+    });
+    expect(Skill.findOne).not.toHaveBeenCalled();
+  });
+
+  test('POST /api/progress accepts both inclusive progress boundaries', async () => {
+    const atZero = {
+      _id: 'progress-zero',
+      progress: 0,
+      populate: jest.fn().mockResolvedValue(),
+    };
+    const atHundred = {
+      _id: 'progress-hundred',
+      progress: 100,
+      populate: jest.fn().mockResolvedValue(),
+    };
+    Skill.findOne.mockResolvedValue({ _id: 'skill-1' });
+    Progress.findOne.mockResolvedValue(null);
+    Progress.create
+      .mockResolvedValueOnce(atZero)
+      .mockResolvedValueOnce(atHundred);
+
+    const zero = await request(app)
+      .post('/api/progress')
+      .set('Authorization', authHeader())
+      .send({ skillId: 'skill-1', progress: 0 });
+    const hundred = await request(app)
+      .post('/api/progress')
+      .set('Authorization', authHeader())
+      .send({ skillId: 'skill-1', progress: 100 });
+
+    expect(zero.status).toBe(201);
+    expect(hundred.status).toBe(201);
+    expect(Progress.create).toHaveBeenNthCalledWith(1, {
+      user: USER_ID,
+      skill: 'skill-1',
+      progress: 0,
+    });
+    expect(Progress.create).toHaveBeenNthCalledWith(2, {
+      user: USER_ID,
+      skill: 'skill-1',
+      progress: 100,
+    });
+  });
+
   test('GET /api/progress returns progress records for the authenticated user', async () => {
     const progressRecords = [
       { _id: PROGRESS_ID, user: USER_ID, progress: 75 },
@@ -93,6 +170,34 @@ describe('Progress API endpoints', () => {
     });
   });
 
+  test.each(['50', null])(
+    'PUT /api/progress/:id rejects invalid progress value %s before database lookup',
+    async (progress) => {
+      const response = await request(app)
+        .put(`/api/progress/${PROGRESS_ID}`)
+        .set('Authorization', authHeader())
+        .send({ progress });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        message: 'Progress must be between 0 and 100',
+      });
+      expect(Progress.findOne).not.toHaveBeenCalled();
+    }
+  );
+
+  test('PUT /api/progress/:id returns 500 when the database lookup fails', async () => {
+    Progress.findOne.mockRejectedValueOnce(new Error('database unavailable'));
+
+    const response = await request(app)
+      .put(`/api/progress/${PROGRESS_ID}`)
+      .set('Authorization', authHeader())
+      .send({ progress: 80 });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ message: 'Server error' });
+  });
+
   test('DELETE /api/progress/:id deletes an owned progress record', async () => {
     Progress.findOneAndDelete.mockResolvedValue({
       _id: PROGRESS_ID,
@@ -112,5 +217,18 @@ describe('Progress API endpoints', () => {
       _id: PROGRESS_ID,
       user: USER_ID,
     });
+  });
+
+  test('DELETE /api/progress/:id returns 500 when the database fails', async () => {
+    Progress.findOneAndDelete.mockRejectedValueOnce(
+      new Error('database unavailable')
+    );
+
+    const response = await request(app)
+      .delete(`/api/progress/${PROGRESS_ID}`)
+      .set('Authorization', authHeader());
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ message: 'Server error' });
   });
 });
