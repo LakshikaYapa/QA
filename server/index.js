@@ -387,7 +387,7 @@ app.post(
           (error, result) => {
             if (error) {
               return reject(
-                error instanceof Error ? error : new Error(String(error))
+                new Error(error instanceof Error ? error.message : String(error))
               );
             }
             if (!result) return reject(new Error('Image upload failed.'));
@@ -1070,7 +1070,7 @@ app.post(
           (error, result) => {
             if (error) {
               return reject(
-                error instanceof Error ? error : new Error(String(error))
+                new Error(error instanceof Error ? error.message : String(error))
               );
             }
             if (!result) return reject(new Error('Image upload failed.'));
@@ -1117,7 +1117,7 @@ app.delete('/api/projects/:id', authMiddleware, async (req, res) => {
   }
 });
 
-if (require.main === module) {
+if (require.main?.filename === __filename) {
   startServer().catch((error) => {
     console.error('Backend startup failed:', error.message);
     process.exitCode = 1;

@@ -1,0 +1,7 @@
+flowchart TD
+    N1([1 Entry]) --> N2[2 Apply roadmap state updater]
+    N2 --> N3{3 Is the skill already completed?}
+    N3 -->|Yes| N4[4 Remove the skill from completed steps]
+    N3 -->|No| N5[5 Append the skill to completed steps]
+    N4 --> N6([6 Exit])
+    N5 --> N6

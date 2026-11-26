@@ -1,0 +1,14 @@
+flowchart TD
+    N1([1 Entry]) --> N2[2 Read saved value in try block]
+    N2 -->|Read succeeds| N3{3 Saved value?}
+    N2 -->|Storage read throws| N9[9 Catch and return empty array]
+    N3 -->|Yes| N4[4 Parse saved JSON]
+    N3 -->|No| N5[5 Use empty array]
+    N4 -->|Parse succeeds| N6{6 Is parsed value an array?}
+    N4 -->|Parse throws| N9
+    N5 --> N6
+    N6 -->|Yes| N7[7 Filter to strings and return]
+    N6 -->|No| N8[8 Return empty array]
+    N7 --> N10([10 Exit])
+    N8 --> N10
+    N9 --> N10
